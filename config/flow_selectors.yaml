@@ -1,0 +1,60 @@
+selectors:
+  # Bộ selector ứng viên (thử lần lượt theo thứ tự ưu tiên)
+  logged_in_marker:
+    - "textarea"
+    - "[contenteditable='true']"
+    - "text=/new project|dự án mới/i"
+    - "button[aria-label*='User' i]"
+    - "button[aria-label*='Account' i]"
+
+  new_project:
+    - "button:has-text('New project')"
+    - "button:has-text('Dự án mới')"
+    - "button[aria-label*='New project' i]"
+    - "text=/^new project$/i"
+
+  prompt_box:
+    - "textarea[placeholder*='prompt' i]"
+    - "textarea"
+    - "[role='textbox']"
+    - "[contenteditable='true']"
+
+  generate_button:
+    - "button[aria-label*='Generate' i]"
+    - "button[aria-label*='Create' i]"
+    - "button:has-text('Generate')"
+    - "button:has-text('Tạo')"
+    - "button:has(i:text('arrow_forward'))"
+    - "button:has-text('Run')"
+
+  settings_button:
+    - "button[aria-label*='settings' i]"
+    - "button[aria-label*='cài đặt' i]"
+    - "button:has-text('Settings')"
+    - "button:has-text('Cài đặt')"
+
+  aspect_16_9:
+    - "text='16:9'"
+    - "[role='option']:has-text('16:9')"
+    - "button:has-text('16:9')"
+    - "[aria-label*='16:9' i]"
+
+  mode_image:
+    - "text=/^images?$/i"
+    - "button:has-text('Image')"
+    - "[role='tab']:has-text('Image')"
+
+  download_button:
+    - "button[aria-label*='Download' i]"
+    - "button:has-text('Download')"
+    - "button:has-text('Tải xuống')"
+
+  add_ingredient:
+    - "button:has-text('Add to ingredients')"
+    - "button:has-text('Save as ingredient')"
+    - "button:has-text('Thêm vào')"
+
+  mention_option:
+    - "[role='option']:has-text('{name}')"
+    - "li:has-text('{name}')"
+    - "div:has-text('{name}')"

@@ -1,0 +1,29 @@
+characters:
+  MinhKinhTe:
+    display_name: Minh Kinh Tế
+    description: >-
+      Vietnamese male economist, 32 years old, neatly styled swept-back black hair,
+      thin elegant metal-frame glasses, confident warm expression, modern navy blue
+      slim-fit blazer over white shirt, no tie
+    style: >-
+      cinematic lighting, shallow depth of field, photorealistic, consistent face,
+      modern high-tech financial studio background, 16:9 aspect ratio
+    reference_shots:
+      - front view, looking straight at camera, neutral confident smile, head and shoulders
+      - three-quarter side view, looking slightly away, thoughtful expression
+      - medium shot standing, one hand holding a tablet, full upper body
+
+  HaTaiChinh:
+    display_name: Hà Tài Chính
+    description: >-
+      Vietnamese female financial analyst, 29 years old, shoulder-length straight black hair,
+      smart charcoal gray blazer, professional friendly smile, pearl earrings
+    style: >-
+      cinematic studio lighting, soft bokeh, sharp focus, professional business news anchor,
+      16:9 aspect ratio
+    reference_shots:
+      - front view looking at camera, pleasant confident smile, news anchor pose
+      - side profile reviewing financial documents on desk
+      - presenting standing next to digital stock ticker screen
+
+default: MinhKinhTe
