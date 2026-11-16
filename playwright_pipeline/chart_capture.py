@@ -2,13 +2,19 @@
 
 from __future__ import annotations
 
+import datetime as dt
+import json
 import logging
+import math
+import time
+import urllib.request
 from pathlib import Path
 from typing import Optional
 
 from .browser import BrowserContextManager
 from .card_templates import (
     render_breaking_news_html,
+    render_financial_chart_html,
     render_metric_card_html,
     render_quote_card_html,
 )
@@ -129,3 +135,91 @@ def render_quote_card(
     )
     with BrowserContextManager(headless=headless) as bm:
         return bm.capture_html(html_content, output_path)
+
+
+def _generate_fallback_candles(bars: int = 80) -> list[dict]:
+    """Sinh dữ liệu nến VN-Index mẫu khi chạy offline hoặc kiểm thử."""
+    candles = []
+    base_price = 1245.0
+    base_date = dt.date(2026, 7, 1)
+    for i in range(bars):
+        d = base_date + dt.timedelta(days=i)
+        wave = math.sin(i / 6.5) * 14.0 + (i * 0.65)
+        o_p = round(base_price + wave, 2)
+        delta = round(math.cos(i / 3.2) * 8.5 + (1.8 if i % 3 != 0 else -2.4), 2)
+        c_p = round(o_p + delta, 2)
+        h_p = round(max(o_p, c_p) + abs(math.sin(i * 1.3)) * 6.5 + 1.2, 2)
+        l_p = round(min(o_p, c_p) - abs(math.cos(i * 1.1)) * 6.0 - 1.0, 2)
+        vol = int((680_000_000 + abs(delta) * 28_000_000) * (0.85 + (i % 5) * 0.08))
+        candles.append(
+            {
+                "date": d.strftime("%d/%m"),
+                "o": o_p,
+                "h": h_p,
+                "l": l_p,
+                "c": c_p,
+                "v": vol,
+            }
+        )
+    return candles
+
+
+def fetch_market_candles(symbol: str = "VNINDEX", bars: int = 80) -> list[dict]:
+    """Lấy dữ liệu OHLCV thực tế từ VNDirect DChart API, tự động fallback nếu offline."""
+    now_ts = int(time.time())
+    from_ts = now_ts - max(bars * 2, 180) * 86400
+    url = (
+        f"https://dchart-api.vndirect.com.vn/dchart/history"
+        f"?resolution=D&symbol={symbol}&from={from_ts}&to={now_ts}"
+    )
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        t_list = data.get("t", [])
+        o_list = data.get("o", [])
+        h_list = data.get("h", [])
+        l_list = data.get("l", [])
+        c_list = data.get("c", [])
+        v_list = data.get("v", [])
+        if t_list and len(t_list) == len(c_list):
+            candles = []
+            for idx in range(len(t_list)):
+                dt_obj = dt.datetime.fromtimestamp(int(t_list[idx]), tz=dt.timezone.utc)
+                candles.append(
+                    {
+                        "date": dt_obj.strftime("%d/%m"),
+                        "o": float(o_list[idx]),
+                        "h": float(h_list[idx]),
+                        "l": float(l_list[idx]),
+                        "c": float(c_list[idx]),
+                        "v": float(v_list[idx]) if idx < len(v_list) else 0.0,
+                    }
+                )
+            return candles[-bars:]
+    except Exception as e:
+        log.warning("Không lấy được dữ liệu trực tuyến cho %s (%s), dùng dữ liệu mẫu.", symbol, e)
+
+    return _generate_fallback_candles(bars=bars)
+
+
+def render_financial_chart(
+    output_path: Path | str,
+    symbol: str = "VNINDEX",
+    title: str = "CHỈ SỐ VN-INDEX — SÀN HOSE",
+    subtitle: str = "Biểu đồ nến Nhật (Daily) • MA20 & MA50 • Khối lượng giao dịch",
+    bars: int = 80,
+    candles: Optional[list[dict]] = None,
+    headless: bool = True,
+) -> Path:
+    """Render và chụp biểu đồ tài chính nến Nhật chuẩn 16:9 (1920x1080) bằng Playwright."""
+    chart_candles = candles if candles is not None else fetch_market_candles(symbol=symbol, bars=bars)
+    html_content = render_financial_chart_html(
+        symbol=symbol,
+        candles=chart_candles,
+        title=title,
+        subtitle=subtitle,
+    )
+    with BrowserContextManager(headless=headless, viewport_width=1920, viewport_height=1080) as bm:
+        return bm.capture_html(html_content, output_path)
+

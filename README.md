@@ -46,6 +46,10 @@ python playwright_pipeline.py card --type quote --title "Hãy tham lam khi ngư�
 
 ### Chụp biểu đồ / trang web tài chính 16:9
 ```powershell
+# Render & chụp biểu đồ kỹ thuật nến Nhật VN-Index chuẩn 16:9 (1920×1080)
+python playwright_pipeline.py chart --symbol VNINDEX -o assets/charts/sample_chart_1080p.png
+
+# Chụp màn hình trang web tài chính trực tiếp theo tỷ lệ 16:9
 python playwright_pipeline.py capture --url "https://vnexpress.net/kinh-doanh" -o output/scene_004.png
 ```
 

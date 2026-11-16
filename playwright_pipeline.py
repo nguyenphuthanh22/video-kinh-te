@@ -26,6 +26,7 @@ from playwright_pipeline import (
     import_downloaded_files,
     ingest_assets,
     render_breaking_news,
+    render_financial_chart,
     render_metric_card,
     render_quote_card,
 )
@@ -106,11 +107,35 @@ def cmd_card(args) -> int:
             output_path=out,
             headless=not args.headed,
         )
+    elif card_type == "chart":
+        render_financial_chart(
+            output_path=out,
+            symbol=args.symbol or "VNINDEX",
+            title=args.title or "CHỈ SỐ VN-INDEX — SÀN HOSE",
+            subtitle=args.subtitle or "Biểu đồ nến Nhật (Daily) • MA20 & MA50 • Khối lượng giao dịch",
+            bars=args.bars,
+            headless=not args.headed,
+        )
     else:
-        print(f"Lỗi: loại card '{card_type}' không hỗ trợ (chọn: metric, breaking, quote)", file=sys.stderr)
+        print(f"Lỗi: loại card '{card_type}' không hỗ trợ (chọn: metric, breaking, quote, chart)", file=sys.stderr)
         return 1
 
     print(f"OK: Đã xuất ảnh card 16:9 tại: {out}")
+    return 0
+
+
+def cmd_chart(args) -> int:
+    """Render và chụp biểu đồ tài chính nến Nhật (mặc định VN-Index) ở tỷ lệ 16:9 (1920x1080)."""
+    out = Path(args.output).resolve()
+    render_financial_chart(
+        output_path=out,
+        symbol=args.symbol,
+        title=args.title,
+        subtitle=args.subtitle,
+        bars=args.bars,
+        headless=not args.headed,
+    )
+    print(f"OK: Đã chụp biểu đồ tài chính {args.symbol} 16:9 (1920x1080) tại: {out}")
     return 0
 
 
@@ -206,7 +231,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     # 2. card
     p_card = sub.add_parser("card", help="Render infographic card kinh tế 16:9 (1920x1080)")
-    p_card.add_argument("--type", choices=["metric", "breaking", "quote"], default="metric")
+    p_card.add_argument("--type", choices=["metric", "breaking", "quote", "chart"], default="metric")
     p_card.add_argument("-o", "--output", required=True, help="File PNG đầu ra")
     p_card.add_argument("--title", help="Tiêu đề card hoặc chỉ số")
     p_card.add_argument("--value", help="Giá trị số liệu (ví dụ: 82.500.000 VNĐ, 4.5%%,...)")
@@ -217,8 +242,29 @@ def build_parser() -> argparse.ArgumentParser:
     p_card.add_argument("--quote", help="Nội dung trích dẫn")
     p_card.add_argument("--author", help="Tác giả câu trích dẫn")
     p_card.add_argument("--headline", help="Dòng tin nóng tiêu đề lớn")
+    p_card.add_argument("--symbol", default="VNINDEX", help="Mã chỉ số/cổ phiếu khi --type chart")
+    p_card.add_argument("--bars", type=int, default=80, help="Số phiên nến hiển thị")
     p_card.add_argument("--headed", action="store_true", help="Chạy có hiển thị cửa sổ")
     p_card.set_defaults(func=cmd_card)
+
+    # 2b. chart
+    p_chart = sub.add_parser("chart", help="Render và chụp biểu đồ tài chính nến Nhật 16:9 (1920x1080)")
+    p_chart.add_argument("--symbol", default="VNINDEX", help="Mã chỉ số/cổ phiếu (mặc định: VNINDEX)")
+    p_chart.add_argument(
+        "-o",
+        "--output",
+        default="assets/charts/sample_chart_1080p.png",
+        help="File PNG đầu ra (mặc định: assets/charts/sample_chart_1080p.png)",
+    )
+    p_chart.add_argument("--title", default="CHỈ SỐ VN-INDEX — SÀN HOSE", help="Tiêu đề biểu đồ")
+    p_chart.add_argument(
+        "--subtitle",
+        default="Biểu đồ nến Nhật (Daily) • MA20 & MA50 • Khối lượng giao dịch",
+        help="Phụ đề biểu đồ",
+    )
+    p_chart.add_argument("--bars", type=int, default=80, help="Số lượng phiên hiển thị")
+    p_chart.add_argument("--headed", action="store_true", help="Chạy có hiển thị cửa sổ")
+    p_chart.set_defaults(func=cmd_chart)
 
     # 3. capture
     p_cap = sub.add_parser("capture", help="Chụp biểu đồ hoặc trang web kinh tế theo tỷ lệ 16:9")

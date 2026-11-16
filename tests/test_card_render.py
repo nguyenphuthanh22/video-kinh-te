@@ -5,11 +5,14 @@ from PIL import Image
 
 from playwright_pipeline.card_templates import (
     render_breaking_news_html,
+    render_financial_chart_html,
     render_metric_card_html,
     render_quote_card_html,
 )
 from playwright_pipeline.chart_capture import (
+    _generate_fallback_candles,
     render_breaking_news,
+    render_financial_chart,
     render_metric_card,
     render_quote_card,
 )
@@ -66,3 +69,22 @@ def test_render_quote_card_file(tmp_path: Path):
     assert target.exists()
     with Image.open(target) as img:
         assert img.size == (1920, 1080)
+
+
+def test_render_financial_chart_file(tmp_path: Path):
+    candles = _generate_fallback_candles(bars=40)
+    html_chart = render_financial_chart_html("VNINDEX", candles)
+    assert "VNINDEX" in html_chart
+    assert "<svg" in html_chart
+
+    target = tmp_path / "vnindex_chart_test.png"
+    render_financial_chart(
+        output_path=target,
+        symbol="VNINDEX",
+        candles=candles,
+        headless=True,
+    )
+    assert target.exists()
+    with Image.open(target) as img:
+        assert img.size == (1920, 1080)
+
