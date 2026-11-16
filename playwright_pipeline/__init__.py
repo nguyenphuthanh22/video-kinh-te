@@ -12,7 +12,9 @@ from .asset_manager import (
 from .browser import BrowserContextManager
 from .chart_capture import (
     capture_url,
+    fetch_market_candles,
     render_breaking_news,
+    render_financial_chart,
     render_metric_card,
     render_quote_card,
 )
@@ -24,6 +26,8 @@ __all__ = [
     "FlowError",
     "load_flow_selectors",
     "capture_url",
+    "fetch_market_candles",
+    "render_financial_chart",
     "render_metric_card",
     "render_breaking_news",
     "render_quote_card",
